@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TURING MORPHOTYPES // Quantum Chaos Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #020617;
+            color: #38bdf8;
+        }
+
+        #canvas3d {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .hud-overlay {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 10;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            backdrop-filter: blur(12px);
+            padding: 16px;
+            border-radius: 12px;
+            width: 320px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+        }
+
+        h1 {
+            font-size: 0.95rem;
+            letter-spacing: 1.5px;
+            color: #fff;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            background: #0b1329;
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 6px;
+            padding: 6px;
+            outline: none;
+            font-size: 0.8rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #0284c7;
+            border: none;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+
+        .btn:hover {
+            background: #0369a1;
+        }
+
+        .info-card {
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: #cbd5e1;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #38bdf8;
+            margin-top: 10px;
+        }
+    </style>
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <canvas id="canvas3d"></canvas>
+
+    <div class="hud-overlay">
+        <h1>TURING MORPHOTYPES</h1>
+
+        <div class="control-group">
+            <label for="morphPreset">Chaos Preset Pattern:</label>
+            <select id="morphPreset" onchange="changePreset()">
+                <option value="coral">Biological Coral Growth</option>
+                <option value="stripes">Turing Stripes (Reaction-Diffusion)</option>
+                <option value="vortex">Quantum Fluid Vortex</option>
+                <option value="crystal">Subatomic Lattice</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="chaosSpeed">Evolution Rate ($\partial t$):</label>
+            <input type="range" id="chaosSpeed" min="0.1" max="3.0" step="0.1" value="1.0">
+        </div>
+
+        <button class="btn" onclick="triggerMutation()">MUTATE GEOMETRY</button>
+
+        <div class="info-card">
+            <strong>Turing Reaction-Diffusion:</strong> Mathematical equations proposed by Alan Turing in 1952 explaining how complex biological patterns emerge spontaneously out of uniform chaotic states.
+        </div>
+    </div>
+
+    <script>
+        // --- 1. THREE.JS ENGINE SETUP ---
+        const canvas = document.getElementById('canvas3d');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020617, 0.04);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 8);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // --- 2. DYNAMIC GEOMETRY GENERATION ---
+        const count = 40000;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(count * 3);
+        const colors = new Float32Array(count * 3);
+        const initialPos = new Float32Array(count * 3);
+
+        for (let i = 0; i < count; i++) {
+            let u = Math.random() * Math.PI * 2;
+            let v = (Math.random() - 0.5) * Math.PI;
+            let r = 2.5 + Math.random() * 0.4;
+
+            let x = r * Math.cos(v) * Math.cos(u);
+            let y = r * Math.cos(v) * Math.sin(u);
+            let z = r * Math.sin(v);
+
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = z;
+
+            initialPos[i * 3] = x;
+            initialPos[i * 3 + 1] = y;
+            initialPos[i * 3 + 2] = z;
+
+            colors[i * 3] = 0.2;
+            colors[i * 3 + 1] = 0.7;
+            colors[i * 3 + 2] = 1.0;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+            size: 0.04,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.85,
+            blending: THREE.AdditiveBlending
+        });
+
+        const morphMesh = new THREE.Points(geometry, material);
+        scene.add(morphMesh);
+
+        // --- 3. REACTION-DIFFUSION EQUATION ENGINE ---
+        let mutationSeed = 1.0;
+
+        function triggerMutation() {
+            mutationSeed = Math.random() * 5.0 + 0.5;
+        }
+
+        function changePreset() {
+            triggerMutation();
+        }
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+            const speed = parseFloat(document.getElementById('chaosSpeed').value);
+            const preset = document.getElementById('morphPreset').value;
+
+            const posAttr = geometry.attributes.position;
+            const colAttr = geometry.attributes.color;
+
+            for (let i = 0; i < count; i++) {
+                let ix = initialPos[i * 3];
+                let iy = initialPos[i * 3 + 1];
+                let iz = initialPos[i * 3 + 2];
+
+                let nx = ix, ny = iy, nz = iz;
+
+                if (preset === 'coral') {
+                    let wave = Math.sin(ix * 4.0 + elapsedTime * speed) * Math.cos(iy * 4.0);
+                    nx = ix + wave * 0.2;
+                    ny = iy + wave * 0.2;
+                    nz = iz + wave * 0.2;
+                } else if (preset === 'stripes') {
+                    let wave = Math.sin((ix + iy + iz) * 6.0 * mutationSeed + elapsedTime * speed);
+                    nx = ix + Math.sin(wave) * 0.15;
+                    ny = iy + Math.cos(wave) * 0.15;
+                } else if (preset === 'vortex') {
+                    let angle = elapsedTime * speed * 0.5 + (ix * ix + iy * iy) * 0.5;
+                    nx = ix * Math.cos(angle) - iy * Math.sin(angle);
+                    ny = ix * Math.sin(angle) + iy * Math.cos(angle);
+                } else if (preset === 'crystal') {
+                    nx = Math.round(ix * 2.0) / 2.0 + Math.sin(elapsedTime * speed) * 0.05;
+                    ny = Math.round(iy * 2.0) / 2.0;
+                    nz = Math.round(iz * 2.0) / 2.0;
+                }
+
+                posAttr.setXYZ(i, nx, ny, nz);
+
+                // Dynamically update color gradient based on particle position
+                colAttr.setXYZ(
+                    i,
+                    Math.abs(Math.sin(nx + elapsedTime)),
+                    Math.abs(Math.cos(ny * 0.5)),
+                    Math.abs(Math.sin(nz * 0.3 + 1.5))
+                );
+            }
+
+            posAttr.needsUpdate = true;
+            colAttr.needsUpdate = true;
+
+            morphMesh.rotation.y = elapsedTime * 0.1;
+            morphMesh.rotation.x = Math.sin(elapsedTime * 0.05) * 0.1;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
